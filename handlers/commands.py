@@ -4,6 +4,7 @@ from aiogram.types import Message, FSInputFile
 from datetime import datetime
 import random
 from config import bot
+from database.db import get_orders_db
 
 router_commands = Router() 
 
@@ -64,3 +65,12 @@ def get_joke():
 @router_commands.message(Command('joke'))
 async def joke_hundler(message: Message):
     await message.answer(get_joke())
+
+@router_commands.message(Command('list'))
+async def list_hundler(message: Message):
+    orders = get_orders_db()
+    if not orders:
+        await message.answer("Заказов нет.")
+    else:
+        order_list = "\n".join([f"Заказ {i+1}:\nРазмер: {order[1]}\nНачинка: {order[2]}\nАдрес: {order[3]}" for i, order in enumerate(orders)])
+        await message.answer(f"Список заказов:\n{order_list}")

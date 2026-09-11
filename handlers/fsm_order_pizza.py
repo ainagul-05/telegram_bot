@@ -3,6 +3,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from database.db import add_order_db
 
 
 class OrderPizza(StatesGroup):
@@ -45,4 +46,10 @@ async def order_stuffing_fsm(message: Message, state: FSMContext):
 async def order_address_fsm(message: Message, state: FSMContext):
     data = await state.update_data(address=message.text)
     await message.answer(f"Ваш заказ: \nРазмер пиццы: {data['size']}\nНачинка: {data['stuffing']}\nАдрес доставки: {data['address']}")
-    await state.clear()
+
+    
+
+
+    add_order_db(size=data['size'], stuffing=data['stuffing'], address=data['address'])
+
+    await state.clear() 
