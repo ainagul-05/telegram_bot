@@ -2,6 +2,10 @@
 venv
 sqlite.db
 __pycache__
+bot.db
+unitled-1.sqlite3-query
+sqlite3.db
+
 
 
 

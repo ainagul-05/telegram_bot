@@ -9,7 +9,10 @@ from database.db import add_product_db
 class AddProduct(StatesGroup):
     name = State()
     price = State()
-    describtion = State()
+    description = State()
+    product_id = State() #артикул
+    category = State()
+    photo = State()
 
 
 router_addproduct = Router()
@@ -30,15 +33,48 @@ async def add_name_fsm(message: Message, state: FSMContext):
 async def add_price_fsm(message: Message, state: FSMContext):
     await state.update_data(price=message.text)
     await message.answer('Введите описание товара:')
-    await state.set_state(AddProduct.describtion)
+    await state.set_state(AddProduct.description)
 
-@router_addproduct.message(AddProduct.describtion)
-async def add_describtion_fsm(message: Message, state: FSMContext):
-    data = await state.update_data(description=message.text)
-    await message.answer(f"Данные о товаре: \nНазвание- {data['name']}\nЦена- {data['price']}\nОписание- {data['description']}")
+@router_addproduct.message(AddProduct.description)
+async def add_description_fsm(message: Message, state: FSMContext):
+    await state.update_data(description=message.text)
+    await message.answer('Введите артикул товара. Он должен быть уникальным:')
+    await state.set_state(AddProduct.product_id)
+
+@router_addproduct.message(AddProduct.product_id)
+async def add_product_id(message: Message, state: FSMContext):
+    await state.update_data(product_id=message.text)
+    await message.answer('Введите категорию товара:')
+    await state.set_state(AddProduct.category)
+
+@router_addproduct.message(AddProduct.category)
+async def add_category(message: Message, state: FSMContext):
+    await state.update_data(category=message.text)
+    await message.answer('Отправьте фото товара:')
+    await state.set_state(AddProduct.photo)
+
+@router_addproduct.message(AddProduct.photo)
+async def add_photo(message: Message, state: FSMContext):
+    await state.update_data(photo=message.photo[-1].file_id)
+
+    data = await state.get_data()
+    print(data)
+
+    await message.answer_photo(photo=data['photo'], caption=f"Данные о товаре: "
+                         f"\nНазвание- {data['name']}"
+                         f"\nЦена- {data['price']}"
+                         f"\nОписание- {data['description']}"
+                         f"\nАртикул- {data['product_id']}"
+                         f"\nКатегория- {data['category']}"
+                         f"\nФото- {data['photo']}")
 
 
-    add_product_db(name=data['name'], price=data['price'], description=data['description'])
+
+
+    
+
+    await add_product_db(name=data['name'], price=data['price'], description=data['description'], 
+                         product_id=data['product_id'], photo=data['photo'], category=data['category'])
     
     await state.clear()
 

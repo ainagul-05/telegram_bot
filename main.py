@@ -20,6 +20,8 @@ async def set_commands():
     await bot.set_my_commands(commands=commands)
 
 async def on_startup():
+    await db.init_db() 
+    await db.init_orders_db()
     await set_commands()
     for admin_id in Admin:
         await bot.send_message(chat_id=admin_id, text="Бот включен")
@@ -34,7 +36,7 @@ dp.include_router(router=echo.router_echo)
 dp.startup.register(on_startup)
 
 if __name__ == "__main__":
-    db.init_db()
+    
     logging.basicConfig(level=logging.INFO)
     asyncio.run(dp.start_polling(bot))
 

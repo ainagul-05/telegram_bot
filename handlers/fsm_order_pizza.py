@@ -3,13 +3,18 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from database.db import add_order_db
+from database.db import add_order_db 
 
 
 class OrderPizza(StatesGroup):
     size = State()
     stuffing = State()
     address = State()
+    order_id = State() 
+    status = State()
+    photo = State()
+
+
 
 
 router_orderpizza = Router()
@@ -44,12 +49,41 @@ async def order_stuffing_fsm(message: Message, state: FSMContext):
 
 @router_orderpizza.message(OrderPizza.address)
 async def order_address_fsm(message: Message, state: FSMContext):
-    data = await state.update_data(address=message.text)
-    await message.answer(f"Ваш заказ: \nРазмер пиццы: {data['size']}\nНачинка: {data['stuffing']}\nАдрес доставки: {data['address']}")
 
-    
+    await state.update_data(address=message.text)
+    await message.answer('Введите ID заказа:')
+    await state.set_state(OrderPizza.order_id)
+
+@router_orderpizza.message(OrderPizza.order_id)
+async def order_id_fsm(message: Message, state: FSMContext):
+    await state.update_data(order_id=message.text)
+    await message.answer('Введите статус заказа:')
+    await state.set_state(OrderPizza.status)
+
+@router_orderpizza.message(OrderPizza.status)
+async def order_status_fsm(message: Message, state: FSMContext):    
+    await state.update_data(status=message.text)
+    await message.answer('Отправьте фото пиццы:')
+    await state.set_state(OrderPizza.photo)
+
+@router_orderpizza.message(OrderPizza.photo)
+async def order_photo_fsm(message: Message, state: FSMContext):
+    await state.update_data(photo=message.photo[-1].file_id)
+
+    data = await state.get_data()
+    await message.answer_photo(photo=data['photo'], caption=f"Ваш заказ: "
+                         f"\nРазмер пиццы: {data['size']}"
+                         f"\nНачинка: {data['stuffing']}"
+                         f"\nАдрес доставки: {data['address']}"
+                         f"\nID заказа: {data['order_id']}"
+                         f"\nСтатус заказа: {data['status']}"
+                         f"\nФото пиццы: {data['photo']}")
 
 
-    add_order_db(size=data['size'], stuffing=data['stuffing'], address=data['address'])
+
+
+
+    await add_order_db(size=data['size'], stuffing=data['stuffing'], address=data['address'], 
+                       order_id=data['order_id'], status=data['status'], photo=data['photo'])
 
     await state.clear() 
