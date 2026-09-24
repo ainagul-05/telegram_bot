@@ -46,3 +46,12 @@ insert_product_detail = 'INSERT INTO products_detail (description, product_id, c
 
 insert_order = 'INSERT INTO orders (size, stuffing, address) VALUES (?, ?, ?)'
 insert_order_detail = 'INSERT INTO orders_detail (order_id, status, photo) VALUES (?, ?, ?)'
+
+
+get_products = """
+     SELECT products.name, products.price, products_detail.description, products_detail.category, products.product_id , products.photo
+     FROM products
+     INNER JOIN products_detail on products.product_id = products_detail.product_id
+"""
+
+update_product = 'UPDATE {table} SET {field} = ? WHERE products.product_id= ?;'

@@ -5,6 +5,8 @@ from datetime import datetime
 import random
 from config import bot
 #from database.db import get_orders_db
+from database import db 
+from handlers import buttons 
 
 router_commands = Router() 
 
@@ -74,3 +76,18 @@ async def joke_hundler(message: Message):
 #     else:
 #         order_list = "\n".join([f"Заказ {i+1}:\nРазмер: {order[1]}\nНачинка: {order[2]}\nАдрес: {order[3]}" for i, order in enumerate(orders)])
 #         await message.answer(f"Список заказов:\n{order_list}")
+
+
+@router_commands.message(Command('products'))
+async def get_products(message: Message):
+    products = await db.get_products_db()
+
+    if not products:
+        await message.answer ('В базе данных товаров нет!')
+        return
+    else:
+        for name , price, description, category, product_id, photo in products:
+            await message.answer_photo(photo=photo , 
+                                       caption=f'Название - {name} \nЦена - {price} \nОписание - {description}  \nКатегория - {category} \nАртикул - {product_id}',
+                                       reply_markup=buttons.product_action(product_id=product_id))
+    
